@@ -13,7 +13,7 @@
 **A production-grade machine learning system for cardiovascular disease risk assessment.**  
 Trains 5 models + ensemble, explains predictions with SHAP, and serves results via REST API.
 
-[Features](#features) · [Quick Start](#quick-start) · [Architecture](#architecture) · [API](#api-usage) · [Results](#model-results) · [فارسی](https://github.com/netblag/heart-disease-predictor/edit/main/README.fa.md)
+[Features](#features) · [Quick Start](#quick-start) · [Architecture](#architecture) · [API](#api-usage) · [Results](#model-results) · [فارسی](https://github.com/netblag/heart-disease-predictor/blob/main/README.fa.md)
 
 </div>
 
