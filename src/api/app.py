@@ -11,7 +11,8 @@ Endpoints:
 - GET  /model/info   → Model metadata and performance
 - GET  /features     → Feature descriptions
 """
-
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -253,12 +254,7 @@ def get_recommendations(risk_level: str, risk_factors: List[str]) -> List[str]:
 
 @app.get("/", tags=["General"])
 async def root():
-    return {
-        "message": "🫀 Heart Disease Risk Predictor API",
-        "version": "1.0.0",
-        "docs": "/docs",
-        "health": "/health"
-    }
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health", tags=["General"])
