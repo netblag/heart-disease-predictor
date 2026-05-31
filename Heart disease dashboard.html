@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heart Risk AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E63946; --red-light: #ff6b7a; --red-dark: #b52b36;
+    --bg: #0a0e1a; --bg2: #111827; --bg3: #1a2235; --bg4: #1f2d44;
+    --border: rgba(255,255,255,0.07); --text: #f0f4ff;
+    --text2: #8899bb; --text3: #4a5878;
+    --green: #22d3a0; --yellow: #f59e0b; --blue: #3b82f6;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; overflow-x: hidden;
+    font-family: 'Vazirmatn', sans-serif;
+    transition: font-family 0.1s;
+  }
+  body.lang-en { font-family: 'DM Sans', sans-serif; }
+
+  .bg-grid {
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(230,57,70,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(230,57,70,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .bg-glow {
+    position:fixed; top:-200px; left:50%; transform:translateX(-50%);
+    width:800px; height:400px;
+    background: radial-gradient(ellipse, rgba(230,57,70,0.08) 0%, transparent 70%);
+    pointer-events:none; z-index:0;
+  }
+
+  .app { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:0 24px 60px; }
+
+  /* ── Header ── */
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:28px 0 40px; border-bottom:1px solid var(--border); margin-bottom:40px;
+  }
+  .logo { display:flex; align-items:center; gap:14px; }
+  .logo-icon {
+    width:44px; height:44px;
+    background:linear-gradient(135deg, var(--red), var(--red-dark));
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:22px; box-shadow:0 0 24px rgba(230,57,70,0.4);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%,100%{box-shadow:0 0 20px rgba(230,57,70,0.4);}
+    50%{box-shadow:0 0 40px rgba(230,57,70,0.7);}
+  }
+  .logo-text h1 { font-size:20px; font-weight:700; letter-spacing:-0.3px; }
+  .logo-text p { font-size:12px; color:var(--text2); margin-top:1px; }
+
+  .header-right { display:flex; align-items:center; gap:12px; }
+
+  /* ── Language Toggle ── */
+  .lang-toggle {
+    display:flex; align-items:center;
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:100px; padding:3px; gap:2px;
+  }
+  .lang-btn {
+    padding:5px 14px; border-radius:100px; border:none;
+    font-size:12px; font-weight:600; cursor:pointer;
+    transition:all 0.2s; background:transparent; color:var(--text3);
+    font-family: inherit;
+  }
+  .lang-btn.active {
+    background:var(--red); color:white;
+    box-shadow:0 2px 8px rgba(230,57,70,0.4);
+  }
+  .lang-btn:not(.active):hover { color:var(--text2); }
+
+  .header-badge {
+    display:flex; align-items:center; gap:8px;
+    background:rgba(34,211,160,0.1); border:1px solid rgba(34,211,160,0.2);
+    border-radius:100px; padding:6px 14px; font-size:12px; color:var(--green);
+  }
+  .badge-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:blink 1.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── Stats ── */
+  .stats-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:40px; }
+  .stat-card {
+    background:var(--bg2); border:1px solid var(--border);
+    border-radius:16px; padding:20px 22px;
+    transition:border-color 0.2s, transform 0.2s;
+  }
+  .stat-card:hover { border-color:rgba(230,57,70,0.3); transform:translateY(-2px); }
+  .stat-label { font-size:11px; color:var(--text2); margin-bottom:8px; }
+  .stat-value { font-size:26px; font-weight:700; line-height:1; }
+  .stat-value.red{color:var(--red);} .stat-value.green{color:var(--green);}
+  .stat-value.yellow{color:var(--yellow);} .stat-value.blue{color:var(--blue);}
+  .stat-sub { font-size:11px; color:var(--text3); margin-top:6px; }
+
+  /* ── Main grid ── */
+  .main-grid { display:grid; grid-template-columns:1fr 380px; gap:24px; }
+
+  /* ── Panel ── */
+  .panel { background:var(--bg2); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+  .panel-header {
+    padding:22px 28px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:12px;
+  }
+  .panel-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; }
+  .panel-icon.red { background:rgba(230,57,70,0.15); }
+  .panel-title { font-size:15px; font-weight:600; }
+  .panel-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+  .form-body { padding:28px; }
+
+  .section-label {
+    font-size:10px; font-weight:600; color:var(--text3);
+    letter-spacing:1.5px; text-transform:uppercase;
+    margin-bottom:16px; margin-top:24px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-label:first-child { margin-top:0; }
+  .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .fields-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .fields-grid.three { grid-template-columns:1fr 1fr 1fr; }
+
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:11px; font-weight:500; color:var(--text2); display:flex; align-items:center; gap:6px; }
+  .field label .tip {
+    width:14px; height:14px; border-radius:50%;
+    background:var(--bg4); border:1px solid var(--border);
+    font-size:9px; color:var(--text3);
+    display:inline-flex; align-items:center; justify-content:center;
+    cursor:help; position:relative;
+  }
+  .field label .tip:hover::after {
+    content:attr(data-tip);
+    position:absolute; bottom:20px; right:0;
+    background:var(--bg4); border:1px solid var(--border);
+    border-radius:8px; padding:6px 10px; font-size:10px; color:var(--text);
+    white-space:nowrap; z-index:100; box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  }
+
+  input[type="range"] { -webkit-appearance:none; width:100%; height:4px; background:var(--bg4); border-radius:4px; outline:none; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:16px; height:16px;
+    border-radius:50%; background:var(--red); cursor:pointer;
+    border:2px solid var(--bg2); box-shadow:0 0 8px rgba(230,57,70,0.5); transition:transform 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+  .range-row { display:flex; align-items:center; gap:12px; }
+  .range-val {
+    min-width:44px; text-align:center;
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:8px; padding:4px 8px; font-size:13px; font-weight:600; color:var(--text);
+  }
+
+  .toggle-group { display:flex; gap:6px; }
+  .toggle-btn {
+    flex:1; padding:8px 6px;
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:10px; font-size:12px; color:var(--text2);
+    cursor:pointer; transition:all 0.15s; font-family:inherit; text-align:center;
+  }
+  .toggle-btn:hover { border-color:rgba(230,57,70,0.4); color:var(--text); }
+  .toggle-btn.active { background:rgba(230,57,70,0.15); border-color:rgba(230,57,70,0.5); color:var(--red-light); font-weight:600; }
+  .toggle-btn.active-green { background:rgba(34,211,160,0.1); border-color:rgba(34,211,160,0.4); color:var(--green); font-weight:600; }
+
+  .submit-btn {
+    width:100%; padding:16px;
+    background:linear-gradient(135deg, var(--red), var(--red-dark));
+    border:none; border-radius:14px; font-size:15px; font-weight:700; color:white;
+    cursor:pointer; margin-top:24px; font-family:inherit; letter-spacing:0.3px;
+    transition:all 0.2s; position:relative; overflow:hidden;
+  }
+  .submit-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent); opacity:0; transition:opacity 0.2s; }
+  .submit-btn:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(230,57,70,0.4); }
+  .submit-btn:hover::before { opacity:1; }
+  .submit-btn:active { transform:translateY(0); }
+  .submit-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .btn-inner { display:flex; align-items:center; justify-content:center; gap:8px; }
+
+  /* ── Result ── */
+  .result-panel { display:flex; flex-direction:column; gap:16px; }
+  .gauge-card { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:28px; text-align:center; }
+  .gauge-title { font-size:11px; color:var(--text2); letter-spacing:1px; text-transform:uppercase; margin-bottom:20px; }
+  .gauge-wrap { position:relative; width:180px; height:100px; margin:0 auto; }
+  .gauge-svg { width:180px; height:100px; overflow:visible; }
+  .gauge-track { fill:none; stroke:var(--bg3); stroke-width:14; }
+  .gauge-fill { fill:none; stroke-width:14; stroke-linecap:round; transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1), stroke 0.5s; }
+  .gauge-needle {
+    position:absolute; bottom:0; left:50%; width:2px; height:72px;
+    background:var(--text2); transform-origin:bottom center;
+    transform:translateX(-50%) rotate(-90deg);
+    transition:transform 1s cubic-bezier(.4,0,.2,1); border-radius:2px;
+  }
+  .gauge-needle::after { content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%); width:10px; height:10px; border-radius:50%; background:var(--text); }
+  .gauge-pct { font-size:40px; font-weight:800; margin:12px 0 4px; transition:color 0.5s; }
+  .gauge-label { font-size:13px; font-weight:600; padding:4px 16px; border-radius:100px; display:inline-block; margin-bottom:6px; transition:all 0.5s; }
+  .gauge-conf { font-size:11px; color:var(--text3); }
+
+  .factors-card, .recs-card { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:22px; }
+  .factors-title { font-size:12px; font-weight:600; color:var(--text2); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .factor-item {
+    display:flex; align-items:flex-start; gap:10px;
+    padding:10px 12px; border-radius:10px; background:var(--bg3);
+    margin-bottom:8px; font-size:12px; color:var(--text2);
+    border:1px solid var(--border); transition:border-color 0.2s;
+  }
+  .factor-item:last-child { margin-bottom:0; }
+  .factor-item.danger { border-color:rgba(230,57,70,0.3); background:rgba(230,57,70,0.05); color:var(--text); }
+  .factor-icon { font-size:14px; flex-shrink:0; margin-top:1px; }
+  .rec-item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; color:var(--text2); line-height:1.5; }
+  .rec-item:last-child { border-bottom:none; padding-bottom:0; }
+  .rec-num { width:22px; height:22px; border-radius:6px; background:var(--bg3); border:1px solid var(--border); font-size:10px; font-weight:700; color:var(--text3); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  .empty-state { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:48px 28px; text-align:center; }
+  .empty-icon { font-size:48px; margin-bottom:16px; opacity:0.4; }
+  .empty-title { font-size:15px; font-weight:600; color:var(--text2); margin-bottom:8px; }
+  .empty-sub { font-size:12px; color:var(--text3); line-height:1.6; }
+
+  .model-bar {
+    background:var(--bg2); border:1px solid var(--border); border-radius:16px;
+    padding:16px 20px; margin-bottom:24px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  }
+  .model-info { display:flex; align-items:center; gap:10px; }
+  .model-label { font-size:11px; color:var(--text3); }
+  .model-name { font-size:13px; font-weight:600; color:var(--text); }
+  .model-metrics { display:flex; gap:20px; }
+  .model-metric { text-align:center; }
+  .model-metric-val { font-size:15px; font-weight:700; color:var(--green); }
+  .model-metric-label { font-size:10px; color:var(--text3); margin-top:2px; }
+
+  .disclaimer {
+    margin-top:32px; padding:14px 18px;
+    background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.15);
+    border-radius:12px; font-size:11px; color:var(--text3);
+    display:flex; align-items:flex-start; gap:10px; line-height:1.6;
+  }
+
+  .spinner { width:48px; height:48px; border-radius:50%; border:3px solid var(--bg3); border-top-color:var(--red); animation:spin 0.8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px);
+    background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:12px 20px;
+    font-size:13px; color:var(--text); box-shadow:0 16px 48px rgba(0,0,0,0.5);
+    transition:transform 0.3s; z-index:200; display:flex; align-items:center; gap:10px;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  .toast.error { border-color:rgba(230,57,70,0.4); }
+  .toast.success { border-color:rgba(34,211,160,0.4); }
+
+  .fade-in { animation:fadeIn 0.4s ease forwards; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:none;} }
+
+  @media(max-width:900px) { .main-grid{grid-template-columns:1fr;} .stats-bar{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:600px) { .fields-grid,.fields-grid.three{grid-template-columns:1fr;} .header-right{flex-wrap:wrap;gap:8px;} }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="toast" id="toast"></div>
+
+<div class="app">
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🫀</div>
+      <div class="logo-text">
+        <h1>Heart Risk AI</h1>
+        <p data-fa="سیستم هوشمند ارزیابی ریسک قلبی‌عروقی" data-en="AI-Powered Cardiovascular Risk Assessment"></p>
+      </div>
+    </div>
+    <div class="header-right">
+      <!-- Language toggle -->
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btnFa" onclick="setLang('fa')">فا</button>
+        <button class="lang-btn" id="btnEn" onclick="setLang('en')">EN</button>
+      </div>
+      <div class="header-badge">
+        <div class="badge-dot"></div>
+        <span data-fa="مدل فعال — AUC: 96.3%" data-en="Model Active — AUC: 96.3%"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Model bar -->
+  <div class="model-bar">
+    <div class="model-info">
+      <span style="font-size:20px">🧠</span>
+      <div>
+        <div class="model-label" data-fa="بهترین مدل انتخاب‌شده" data-en="Best Selected Model"></div>
+        <div class="model-name">Logistic Regression + Feature Engineering</div>
+      </div>
+    </div>
+    <div class="model-metrics">
+      <div class="model-metric"><div class="model-metric-val">96.3%</div><div class="model-metric-label">AUC</div></div>
+      <div class="model-metric"><div class="model-metric-val">89.1%</div><div class="model-metric-label">Recall</div></div>
+      <div class="model-metric"><div class="model-metric-val">89.1%</div><div class="model-metric-label">F1 Score</div></div>
+      <div class="model-metric"><div class="model-metric-val">1000</div><div class="model-metric-label" data-fa="بیمار آموزشی" data-en="Training Patients"></div></div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label" data-fa="بیماران ارزیابی‌شده" data-en="Patients Assessed"></div>
+      <div class="stat-value blue" id="totalCount">0</div>
+      <div class="stat-sub" data-fa="در این جلسه" data-en="This session"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" data-fa="ریسک بالا" data-en="High Risk"></div>
+      <div class="stat-value red" id="highCount">0</div>
+      <div class="stat-sub" data-fa="نیاز به پیگیری فوری" data-en="Immediate follow-up needed"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" data-fa="ریسک متوسط" data-en="Moderate Risk"></div>
+      <div class="stat-value yellow" id="midCount">0</div>
+      <div class="stat-sub" data-fa="نیاز به بررسی" data-en="Needs evaluation"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label" data-fa="ریسک پایین" data-en="Low Risk"></div>
+      <div class="stat-value green" id="lowCount">0</div>
+      <div class="stat-sub" data-fa="وضعیت قابل قبول" data-en="Acceptable condition"></div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+    <!-- Form -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon red">📋</div>
+        <div>
+          <div class="panel-title" data-fa="اطلاعات بالینی بیمار" data-en="Patient Clinical Data"></div>
+          <div class="panel-sub" data-fa="تمام فیلدها را با دقت پر کنید" data-en="Fill in all fields carefully"></div>
+        </div>
+      </div>
+      <div class="form-body">
+
+        <div class="section-label" data-fa="اطلاعات پایه" data-en="Basic Information"></div>
+        <div class="fields-grid">
+          <div class="field">
+            <label><span data-fa="سن (سال)" data-en="Age (years)"></span> <span class="tip" data-tip-fa="سن بیمار بین ۱۸ تا ۱۰۰" data-tip-en="Patient age 18–100">?</span></label>
+            <div class="range-row">
+              <input type="range" id="age" min="18" max="100" value="54" oninput="updateVal('age','ageVal')">
+              <span class="range-val" id="ageVal">54</span>
+            </div>
+          </div>
+          <div class="field">
+            <label><span data-fa="جنسیت" data-en="Sex"></span></label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="sex_male" onclick="setSex(1)" data-fa="مرد" data-en="Male"></button>
+              <button class="toggle-btn" id="sex_female" onclick="setSex(0)" data-fa="زن" data-en="Female"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label" data-fa="علائم حیاتی" data-en="Vital Signs"></div>
+        <div class="fields-grid">
+          <div class="field">
+            <label><span data-fa="فشار خون استراحت (mmHg)" data-en="Resting Blood Pressure (mmHg)"></span> <span class="tip" data-tip-fa="فشار خون در استراحت" data-tip-en="Blood pressure at rest">?</span></label>
+            <div class="range-row">
+              <input type="range" id="trestbps" min="80" max="220" value="130" oninput="updateVal('trestbps','bpVal');checkBP()">
+              <span class="range-val" id="bpVal">130</span>
+            </div>
+          </div>
+          <div class="field">
+            <label><span data-fa="کلسترول سرم (mg/dl)" data-en="Serum Cholesterol (mg/dl)"></span> <span class="tip" data-tip-fa="بالاتر از ۲۴۰: پرخطر" data-tip-en="Above 240: high risk">?</span></label>
+            <div class="range-row">
+              <input type="range" id="chol" min="100" max="600" value="250" oninput="updateVal('chol','cholVal');checkChol()">
+              <span class="range-val" id="cholVal">250</span>
+            </div>
+          </div>
+          <div class="field">
+            <label><span data-fa="حداکثر ضربان قلب" data-en="Max Heart Rate Achieved"></span> <span class="tip" data-tip-fa="بیشترین HR در تست ورزش" data-tip-en="Peak HR during exercise test">?</span></label>
+            <div class="range-row">
+              <input type="range" id="thalach" min="60" max="250" value="150" oninput="updateVal('thalach','hrVal')">
+              <span class="range-val" id="hrVal">150</span>
+            </div>
+          </div>
+          <div class="field">
+            <label><span data-fa="افسردگی ST (oldpeak)" data-en="ST Depression (oldpeak)"></span> <span class="tip" data-tip-fa="بالای ۲ خطرناک است" data-tip-en="Above 2.0 is dangerous">?</span></label>
+            <div class="range-row">
+              <input type="range" id="oldpeak" min="0" max="10" step="0.1" value="1.5" oninput="updateVal('oldpeak','stVal')">
+              <span class="range-val" id="stVal">1.5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label" data-fa="یافته‌های بالینی" data-en="Clinical Findings"></div>
+
+        <div class="field" style="margin-bottom:14px">
+          <label><span data-fa="نوع درد قفسه سینه" data-en="Chest Pain Type"></span> <span class="tip" data-tip-fa="آسیمپتوماتیک = پرریسک‌ترین" data-tip-en="Asymptomatic = highest risk">?</span></label>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="cp_0" onclick="setCP(0)" data-fa="آسیمپتوماتیک" data-en="Asymptomatic"></button>
+            <button class="toggle-btn active" id="cp_1" onclick="setCP(1)" data-fa="آتیپیک" data-en="Atypical"></button>
+            <button class="toggle-btn" id="cp_2" onclick="setCP(2)" data-fa="غیرآنژینال" data-en="Non-anginal"></button>
+            <button class="toggle-btn" id="cp_3" onclick="setCP(3)" data-fa="تیپیک آنژین" data-en="Typical Angina"></button>
+          </div>
+        </div>
+
+        <div class="fields-grid three">
+          <div class="field">
+            <label><span data-fa="قند خون ناشتا > ۱۲۰" data-en="Fasting Blood Sugar > 120"></span></label>
+            <div class="toggle-group">
+              <button class="toggle-btn" id="fbs_1" onclick="setFbs(1)" data-fa="بله" data-en="Yes"></button>
+              <button class="toggle-btn active-green" id="fbs_0" onclick="setFbs(0)" data-fa="خیر" data-en="No"></button>
+            </div>
+          </div>
+          <div class="field">
+            <label><span data-fa="آنژین ورزشی" data-en="Exercise Angina"></span></label>
+            <div class="toggle-group">
+              <button class="toggle-btn" id="exang_1" onclick="setExang(1)" data-fa="بله" data-en="Yes"></button>
+              <button class="toggle-btn active-green" id="exang_0" onclick="setExang(0)" data-fa="خیر" data-en="No"></button>
+            </div>
+          </div>
+          <div class="field">
+            <label><span data-fa="تعداد رگ‌های اصلی (ca)" data-en="Major Vessels (ca)"></span></label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="ca_0" onclick="setCA(0)" style="font-size:11px">0</button>
+              <button class="toggle-btn" id="ca_1" onclick="setCA(1)" style="font-size:11px">1</button>
+              <button class="toggle-btn" id="ca_2" onclick="setCA(2)" style="font-size:11px">2</button>
+              <button class="toggle-btn" id="ca_3" onclick="setCA(3)" style="font-size:11px">3</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fields-grid" style="margin-top:14px">
+          <div class="field">
+            <label><span data-fa="نتیجه ECG استراحت" data-en="Resting ECG Result"></span></label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="ecg_0" onclick="setECG(0)" data-fa="نرمال" data-en="Normal"></button>
+              <button class="toggle-btn" id="ecg_1" onclick="setECG(1)" data-fa="ST غیرطبیعی" data-en="ST Abnormal"></button>
+              <button class="toggle-btn" id="ecg_2" onclick="setECG(2)" data-fa="هایپرتروفی" data-en="Hypertrophy"></button>
+            </div>
+          </div>
+          <div class="field">
+            <label><span data-fa="شیب ST اوج ورزش" data-en="Peak Exercise ST Slope"></span></label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="sl_0" onclick="setSlope(0)" data-fa="صعودی" data-en="Upsloping"></button>
+              <button class="toggle-btn" id="sl_1" onclick="setSlope(1)" data-fa="صاف" data-en="Flat"></button>
+              <button class="toggle-btn" id="sl_2" onclick="setSlope(2)" data-fa="نزولی" data-en="Downsloping"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:14px">
+          <label><span data-fa="تالاسمی" data-en="Thalassemia"></span> <span class="tip" data-tip-fa="نقص برگشت‌پذیر = پرریسک" data-tip-en="Reversible defect = highest risk">?</span></label>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="thal_0" onclick="setThal(0)" data-fa="نامشخص" data-en="Unknown"></button>
+            <button class="toggle-btn" id="thal_1" onclick="setThal(1)" data-fa="نرمال" data-en="Normal"></button>
+            <button class="toggle-btn active" id="thal_2" onclick="setThal(2)" data-fa="نقص ثابت" data-en="Fixed Defect"></button>
+            <button class="toggle-btn" id="thal_3" onclick="setThal(3)" data-fa="نقص برگشت‌پذیر" data-en="Reversible Defect"></button>
+          </div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="predict()">
+          <span class="btn-inner">
+            <span>🔬</span>
+            <span data-fa="تحلیل و پیش‌بینی ریسک" data-en="Analyze & Predict Risk"></span>
+          </span>
+        </button>
+
+        <div class="disclaimer">
+          <span style="font-size:14px;flex-shrink:0">⚠️</span>
+          <span data-fa="این ابزار صرفاً جهت پژوهش است و نباید جایگزین تشخیص پزشکی متخصص شود." data-en="This tool is for research only and must not replace professional medical diagnosis."></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result panel -->
+    <div class="result-panel" id="resultPanel">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🫀</div>
+        <div class="empty-title" data-fa="منتظر ورودی داده" data-en="Awaiting Patient Data"></div>
+        <div class="empty-sub" data-fa="اطلاعات بالینی بیمار را وارد کنید و دکمه تحلیل را بزنید" data-en="Enter the patient's clinical information and press the Analyze button"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let lang = 'fa';
+let state = { age:54, sex:1, cp:1, trestbps:130, chol:250, fbs:0, restecg:0, thalach:150, exang:0, oldpeak:1.5, slope:0, ca:0, thal:2 };
+let sessionStats = { total:0, high:0, mid:0, low:0 };
+let lastResult = null;
+
+// ── Language system ────────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  document.body.classList.toggle('lang-en', l === 'en');
+
+  document.getElementById('btnFa').classList.toggle('active', l === 'fa');
+  document.getElementById('btnEn').classList.toggle('active', l === 'en');
+
+  // Update all data-fa / data-en elements
+  document.querySelectorAll('[data-fa]').forEach(el => {
+    if (el.tagName === 'BUTTON') {
+      el.textContent = el.getAttribute('data-' + l) || el.textContent;
+    } else {
+      el.textContent = el.getAttribute('data-' + l) || el.textContent;
+    }
+  });
+
+  // Update tooltip data-tip
+  document.querySelectorAll('[data-tip-fa]').forEach(el => {
+    el.setAttribute('data-tip', el.getAttribute('data-tip-' + l));
+  });
+
+  // Re-render result if exists
+  if (lastResult) renderResult(lastResult);
+}
+
+function t(fa, en) { return lang === 'fa' ? fa : en; }
+
+// ── Input helpers ──────────────────────────────────────────────
+function updateVal(id, displayId) {
+  state[id] = parseFloat(document.getElementById(id).value);
+  document.getElementById(displayId).textContent = state[id];
+}
+function setSex(v) {
+  state.sex = v;
+  document.getElementById('sex_male').className  = 'toggle-btn' + (v===1?' active':'');
+  document.getElementById('sex_female').className = 'toggle-btn' + (v===0?' active':'');
+}
+function setCP(v) {
+  state.cp = v;
+  [0,1,2,3].forEach(i => document.getElementById('cp_'+i).className='toggle-btn'+(i===v?' active':''));
+}
+function setFbs(v) {
+  state.fbs = v;
+  document.getElementById('fbs_1').className='toggle-btn'+(v===1?' active':'');
+  document.getElementById('fbs_0').className='toggle-btn'+(v===0?' active-green':'');
+}
+function setExang(v) {
+  state.exang = v;
+  document.getElementById('exang_1').className='toggle-btn'+(v===1?' active':'');
+  document.getElementById('exang_0').className='toggle-btn'+(v===0?' active-green':'');
+}
+function setCA(v) {
+  state.ca = v;
+  [0,1,2,3].forEach(i => document.getElementById('ca_'+i).className='toggle-btn'+(i===v?' active':''));
+}
+function setECG(v) {
+  state.restecg = v;
+  [0,1,2].forEach(i => document.getElementById('ecg_'+i).className='toggle-btn'+(i===v?' active':''));
+}
+function setSlope(v) {
+  state.slope = v;
+  [0,1,2].forEach(i => document.getElementById('sl_'+i).className='toggle-btn'+(i===v?' active':''));
+}
+function setThal(v) {
+  state.thal = v;
+  [0,1,2,3].forEach(i => document.getElementById('thal_'+i).className='toggle-btn'+(i===v?' active':''));
+}
+function checkBP() {
+  document.getElementById('bpVal').style.color = state.trestbps >= 140 ? 'var(--red-light)' : 'var(--text)';
+}
+function checkChol() {
+  document.getElementById('cholVal').style.color = state.chol >= 240 ? 'var(--yellow)' : 'var(--text)';
+}
+
+// ── Feature engineering ────────────────────────────────────────
+function engineerFeatures(d) {
+  return {
+    ...d,
+    hr_age_ratio: d.thalach / d.age,
+    expected_max_hr: 220 - d.age,
+    hr_reserve_pct: (d.thalach / (220 - d.age)) * 100,
+    chol_age_interaction: d.chol * d.age / 1000,
+    hypertension_risk: d.trestbps >= 130 ? 1 : 0,
+    st_depression_severe: d.oldpeak >= 2.0 ? 1 : 0,
+    multi_vessel: d.ca >= 2 ? 1 : 0,
+    clinical_risk_score:
+      (d.age > 55 ? 2 : 0) + d.sex * 1.5 +
+      (d.cp === 0 ? 2 : 0) + (d.trestbps > 140 ? 1 : 0) +
+      (d.chol > 240 ? 1 : 0) + d.exang * 2 +
+      (d.oldpeak > 1 ? 1.5 : 0) + d.ca * 1.5,
+    age_group: Math.min(Math.floor(d.age / 10) - 3, 4),
+    cp_risk: {0:3,1:2,2:1,3:0}[d.cp] ?? 0,
+  };
+}
+
+function computeRisk(d) {
+  const f = engineerFeatures(d);
+  let logit = -4.2;
+  logit += f.clinical_risk_score * 0.41;
+  logit += (f.cp===0?0.95:f.cp===1?0.45:f.cp===2?0.2:-0.1);
+  logit += f.thal===3?0.85:f.thal===2?0.35:0;
+  logit += f.ca * 0.55;
+  logit += f.exang * 0.72;
+  logit += f.oldpeak * 0.38;
+  logit += (f.trestbps - 130) / 100 * 1.2;
+  logit -= (f.thalach - 150) / 100 * 0.8;
+  logit += f.slope===2?0.55:f.slope===1?0.2:0;
+  logit += (f.age - 50) / 20 * 0.6;
+  logit += f.sex===1?0.35:0;
+  logit += f.restecg===2?0.4:f.restecg===1?0.15:0;
+  logit += f.chol>300?0.3:f.chol>240?0.1:0;
+  return Math.min(Math.max(1/(1+Math.exp(-logit)), 0.02), 0.98);
+}
+
+function getRiskFactors(d) {
+  const factors = [];
+  if (d.age > 55)      factors.push({icon:'🔴', fa:`سن بالا (${d.age} سال)`,          en:`Advanced age (${d.age} yrs)`,         danger:true});
+  if (d.sex === 1)     factors.push({icon:'🔴', fa:'جنس مذکر (ریسک پایه بالاتر)',      en:'Male sex (higher baseline risk)',       danger:true});
+  if (d.cp === 0)      factors.push({icon:'🔴', fa:'درد قفسه سینه آسیمپتوماتیک',       en:'Asymptomatic chest pain pattern',       danger:true});
+  if (d.trestbps>140)  factors.push({icon:'🟠', fa:`فشار خون بالا (${d.trestbps} mmHg)`,en:`Hypertension (${d.trestbps} mmHg)`,   danger:true});
+  if (d.chol>240)      factors.push({icon:'🟠', fa:`کلسترول بالا (${d.chol} mg/dl)`,   en:`High cholesterol (${d.chol} mg/dl)`,   danger:false});
+  if (d.exang===1)     factors.push({icon:'🔴', fa:'آنژین ناشی از ورزش',               en:'Exercise-induced angina',               danger:true});
+  if (d.oldpeak>2.0)   factors.push({icon:'🔴', fa:`افسردگی ST شدید (${d.oldpeak})`,   en:`Severe ST depression (${d.oldpeak})`,   danger:true});
+  if (d.ca>=2)         factors.push({icon:'🔴', fa:`بیماری چند رگ (${d.ca} رگ)`,       en:`Multi-vessel disease (${d.ca} vessels)`, danger:true});
+  if (d.thal===3)      factors.push({icon:'🟠', fa:'نقص تالاسمی برگشت‌پذیر',           en:'Reversible thalassemia defect',         danger:false});
+  if (d.slope===2)     factors.push({icon:'🟠', fa:'شیب نزولی ST در ورزش',             en:'Downsloping ST at peak exercise',       danger:false});
+  if (!factors.length) factors.push({icon:'🟢', fa:'هیچ عامل خطر مهمی شناسایی نشد',    en:'No major individual risk factors found', danger:false});
+  return factors;
+}
+
+function getRecs(level) {
+  const recs = {
+    HIGH: [
+      {fa:'مراجعه فوری به متخصص قلب و عروق',         en:'Immediate cardiology consultation'},
+      {fa:'تست استرس و تصویربرداری کرونری',           en:'Stress test and coronary imaging'},
+      {fa:'بررسی و اصلاح داروهای فعلی',              en:'Review and adjust current medications'},
+      {fa:'ترک سیگار، رژیم مدیترانه‌ای، ورزش تدریجی', en:'Quit smoking, Mediterranean diet, gradual exercise'},
+      {fa:'پایش روزانه فشار خون و کلسترول',           en:'Daily monitoring of BP and cholesterol'},
+    ],
+    MODERATE: [
+      {fa:'مراجعه به متخصص قلب ظرف ۱-۲ هفته', en:'Cardiology appointment within 1–2 weeks'},
+      {fa:'افزایش فعالیت بدنی زیر نظر پزشک',  en:'Increase physical activity under medical supervision'},
+      {fa:'بهینه‌سازی ریسک‌فاکتورهای قابل تغییر',en:'Optimize modifiable risk factors'},
+      {fa:'کنترل دوره‌ای هر ۳-۶ ماه',         en:'Periodic checkups every 3–6 months'},
+    ],
+    LOW: [
+      {fa:'ادامه چکاپ‌های پیشگیرانه سالانه',  en:'Continue annual preventive checkups'},
+      {fa:'حفظ سبک زندگی فعال و سالم',        en:'Maintain active and healthy lifestyle'},
+      {fa:'رژیم غذایی کم‌نمک و کم‌چرب',       en:'Low-sodium, low-fat diet'},
+    ],
+  };
+  return recs[level] || recs.LOW;
+}
+
+// ── Render result ──────────────────────────────────────────────
+function renderResult(res) {
+  const {prob, pct, level, levelFa, levelEn, levelColor, levelBg, margin} = res;
+  const levelLabel = lang === 'fa' ? levelFa : levelEn;
+  const confLabel = lang === 'fa'
+    ? (margin>=0.35?'بسیار بالا':margin>=0.2?'بالا':margin>=0.1?'متوسط':'پایین')
+    : (margin>=0.35?'Very High':margin>=0.2?'High':margin>=0.1?'Moderate':'Low');
+
+  const factors = getRiskFactors(state);
+  const recs = getRecs(level);
+  const circumference = 80 * Math.PI;
+  const dashOffset = circumference * (1 - prob);
+  const needleAngle = -90 + prob * 180;
+  const strokeColor = level==='HIGH'?'#E63946':level==='MODERATE'?'#f59e0b':'#22d3a0';
+
+  const gaugeLow  = lang==='fa' ? 'پایین' : 'Low';
+  const gaugeMid  = lang==='fa' ? 'متوسط' : 'Mid';
+  const gaugeHigh = lang==='fa' ? 'بالا'  : 'High';
+  const gaugeTitle   = t('سطح ریسک بیماری قلبی','Heart Disease Risk Level');
+  const confPrefix   = t('اطمینان پیش‌بینی:','Prediction Confidence:');
+  const factorsTitle = t('⚠️ عوامل خطر شناسایی‌شده','⚠️ Identified Risk Factors');
+  const recsTitle    = t('💊 توصیه‌های بالینی','💊 Clinical Recommendations');
+
+  document.getElementById('resultPanel').innerHTML = `
+    <div class="gauge-card fade-in">
+      <div class="gauge-title">${gaugeTitle}</div>
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 180 100">
+          <path class="gauge-track" d="M 10,90 A 80,80 0 0,1 170,90" stroke-linecap="round"/>
+          <path class="gauge-fill" d="M 10,90 A 80,80 0 0,1 170,90"
+            stroke="${strokeColor}"
+            stroke-dasharray="${circumference}"
+            stroke-dashoffset="${dashOffset}"/>
+          <text x="10"  y="108" font-size="9" fill="#4a5878" font-family="Vazirmatn,DM Sans">${gaugeLow}</text>
+          <text x="80"  y="14"  font-size="9" fill="#4a5878" font-family="Vazirmatn,DM Sans" text-anchor="middle">${gaugeMid}</text>
+          <text x="168" y="108" font-size="9" fill="#4a5878" font-family="Vazirmatn,DM Sans" text-anchor="end">${gaugeHigh}</text>
+        </svg>
+        <div class="gauge-needle" style="transform:translateX(-50%) rotate(${needleAngle}deg)"></div>
+      </div>
+      <div class="gauge-pct" style="color:${levelColor}">${pct}%</div>
+      <span class="gauge-label" style="color:${levelColor};background:${levelBg}">${levelLabel}</span>
+      <div class="gauge-conf">${confPrefix} ${confLabel}</div>
+    </div>
+    <div class="factors-card fade-in" style="animation-delay:0.1s">
+      <div class="factors-title">${factorsTitle}</div>
+      ${factors.map(f=>`
+        <div class="factor-item ${f.danger?'danger':''}">
+          <span class="factor-icon">${f.icon}</span>
+          <span>${lang==='fa'?f.fa:f.en}</span>
+        </div>`).join('')}
+    </div>
+    <div class="recs-card fade-in" style="animation-delay:0.2s">
+      <div class="factors-title">${recsTitle}</div>
+      ${recs.map((r,i)=>`
+        <div class="rec-item">
+          <span class="rec-num">${i+1}</span>
+          <span>${lang==='fa'?r.fa:r.en}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── Predict ────────────────────────────────────────────────────
+async function predict() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  const loadingText = t('در حال تحلیل...','Analyzing...');
+  btn.querySelector('.btn-inner').innerHTML = `<span class="spinner" style="width:18px;height:18px;border-width:2px"></span><span>${loadingText}</span>`;
+
+  await new Promise(r => setTimeout(r, 900));
+
+  const prob = computeRisk(state);
+  const pct = Math.round(prob * 100);
+  const level = prob >= 0.70 ? 'HIGH' : prob >= 0.40 ? 'MODERATE' : 'LOW';
+  const margin = Math.abs(prob - 0.5);
+  const levelColor = level==='HIGH'?'var(--red)':level==='MODERATE'?'var(--yellow)':'var(--green)';
+  const levelBg    = level==='HIGH'?'rgba(230,57,70,0.15)':level==='MODERATE'?'rgba(245,158,11,0.15)':'rgba(34,211,160,0.12)';
+
+  lastResult = { prob, pct, level, levelFa: level==='HIGH'?'ریسک بالا':level==='MODERATE'?'ریسک متوسط':'ریسک پایین', levelEn: level==='HIGH'?'High Risk':level==='MODERATE'?'Moderate Risk':'Low Risk', levelColor, levelBg, margin };
+
+  sessionStats.total++;
+  if (level==='HIGH') sessionStats.high++;
+  else if (level==='MODERATE') sessionStats.mid++;
+  else sessionStats.low++;
+  document.getElementById('totalCount').textContent = sessionStats.total;
+  document.getElementById('highCount').textContent  = sessionStats.high;
+  document.getElementById('midCount').textContent   = sessionStats.mid;
+  document.getElementById('lowCount').textContent   = sessionStats.low;
+
+  renderResult(lastResult);
+
+  btn.disabled = false;
+  const btnLabel = t('تحلیل و پیش‌بینی ریسک','Analyze & Predict Risk');
+  btn.querySelector('.btn-inner').innerHTML = `<span>🔬</span><span>${btnLabel}</span>`;
+
+  const toastMsg = level==='HIGH' ? t('🔴 ریسک بالا شناسایی شد','🔴 High Risk Detected')
+    : level==='MODERATE' ? t('🟡 ریسک متوسط','🟡 Moderate Risk')
+    : t('🟢 ریسک پایین','🟢 Low Risk');
+  showToast(toastMsg, level==='HIGH'?'error':'success');
+}
+
+function showToast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.className = `toast ${type}`, 2800);
+}
+
+// Init language labels
+setLang('fa');
+</script>
+</body>
+</html>
