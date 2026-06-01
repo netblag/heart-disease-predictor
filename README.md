@@ -66,7 +66,7 @@ Cross-validation AUC: **0.948 ± 0.013** (5-fold stratified)
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/heart-disease-predictor.git
+git clone https://github.com/netblag/heart-disease-predictor.git
 cd heart-disease-predictor
 ```
 
