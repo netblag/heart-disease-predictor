@@ -38,7 +38,7 @@ Trains 5 models + ensemble, explains predictions with SHAP, and serves results v
 - **Docker support** for containerized deployment
 
 ---
-  
+
 ## Model Results
 
 | Model | Accuracy | Precision | Recall | F1 | **AUC** |
