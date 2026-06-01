@@ -24,7 +24,9 @@ Trains 5 models + ensemble, explains predictions with SHAP, and serves results v
 > This project is for **educational and research purposes only**. It must **NOT** be used as a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider.
 
 ---
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://heart-disease-predictor-qa4p.onrender.com)
 
+---
 ## Features
 
 - **Multi-model training**: Logistic Regression, Random Forest, XGBoost, LightGBM, SVM + Soft Voting Ensemble
