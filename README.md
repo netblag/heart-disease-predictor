@@ -25,6 +25,10 @@ Trains 5 models + ensemble, explains predictions with SHAP, and serves results v
 
 ---
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://heart-disease-predictor-qa4p.onrender.com)
+----
+<p align="center">
+  <img src="heart-disease-predictor.png" alt="Sample1" width="600" height="300"/>
+</p>
 
 ---
 ## Features
