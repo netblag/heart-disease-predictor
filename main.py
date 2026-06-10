@@ -9,7 +9,7 @@ Orchestrates the complete ML pipeline:
 5. Create visualizations
 6. Save artifacts for API serving
 
-Usage:  
+Usage:   
     python main.py              # Full pipeline
     python main.py --no-tune   # Skip hyperparameter tuning (faster)
     python main.py --api-only  # Only start the API server
